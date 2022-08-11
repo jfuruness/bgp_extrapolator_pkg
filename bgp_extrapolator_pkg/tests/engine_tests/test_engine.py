@@ -39,6 +39,40 @@ from bgp_simulator_pkg import Config034
 from bgp_simulator_pkg import EngineTester
 
 
+BGP_CONFIGS = [Config001,
+               Config002,
+               Config003,
+               Config009,
+               Config010,
+               Config011,
+               Config012,
+               Config013,
+               Config014,
+               Config015,
+               Config016,
+               Config019,
+               Config020,
+               Config023,
+               Config024,
+               Config027,
+               Config028]
+ROV_CONFIGS = [Config005,
+               Config006,
+               Config007,
+               Config008,
+               Config017,
+               Config018,
+               Config021,
+               Config022,
+               Config025,
+               Config026]
+WONT_WORK_DONT_INCLUDE = [Config029,
+                          Config030,
+                          Config031,
+                          Config032,
+                          Config033,
+                          Config034]
+
 @pytest.mark.engine
 class TestEngine:
     """Performs a system test on the engine
@@ -46,56 +80,20 @@ class TestEngine:
     See README of bgp_simulator_pkg for in depth details
     """
 
-    @pytest.mark.parametrize("conf",
-                             [Config001,
-                              Config002,
-                              Config003,
-                              Config004,
-                              Config005,
-                              Config006,
-                              Config007,
-                              Config008,
-                              Config009,
-                              Config010,
-                              Config011,
-                              Config012,
-                              Config013,
-                              Config014,
-                              Config015,
-                              Config016,
-                              Config017,
-                              Config018,
-                              Config019,
-                              Config020,
-                              Config021,
-                              Config022,
-                              Config023,
-                              Config024,
-                              Config025,
-                              Config026,
-                              Config027,
-                              Config028,
-                              Config029,
-                              Config030,
-                              Config031,
-                              Config032,
-                              Config033,
-                              Config034])
-    def test_engine(self, conf: EngineTestConfig, overwrite: bool):
+    @pytest.mark.parametrize("conf", BGP_CONFIGS)
+    def test_engine(self,
+                    conf: EngineTestConfig,
+                    overwrite: bool,
+                    # Engine tester that is patched with extrapolator
+                    ExtrapolatorEngineTesterCls):
         """Performs a system test on the engine
 
         See README of bgp_simulator_pkg for in depth details
         """
 
-        # Patch the simulation engine.run function
-        # Instead of running, dump relationships and seeded announcements
-        # Run the extrapolator
-        # Read in the extrapolator output
-        # continue on as normal, tests should work...
-        raise NotImplementedError
-        EngineTester(base_dir=self.base_dir,
-                     conf=conf,
-                     overwrite=overwrite).test_engine()
+        ExtrapolatorEngineTesterCls(base_dir=self.base_dir,
+                                    conf=conf,
+                                    overwrite=overwrite).test_engine()
 
     @property
     def base_dir(self) -> Path:

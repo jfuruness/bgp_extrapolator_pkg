@@ -1,4 +1,5 @@
 from pathlib import Path
+from bgp_simulator_pkg import Simulation
 
 
 def main():

@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Tiebreaking(Enum):
     """ASN tiebreaking methods beyond AS Paths"""
 

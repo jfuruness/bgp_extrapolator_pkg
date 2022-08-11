@@ -99,9 +99,10 @@ class Extrapolator:
     def _run_engine(self, config_path: Path):
         """Runs the extrapolator engine"""
 
+        cmd = f"{self._executable_path} --config {config_path}"
+        input(cmd)
         # Run the BGP Extrapolator Engine
-        check_call(f"{self._executable_path} --config {config_path}",
-                   shell=True)
+        check_call(cmd, shell=True)
 
 #################
 # Install funcs #

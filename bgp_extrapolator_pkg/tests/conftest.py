@@ -25,6 +25,17 @@ def install_extrapolator():
     Extrapolator().install()
 
 
+# TODO: Fix. This isn't properly patched
+# This is just the default on Caida
+CAIDA_TSV_PATH = Path("/tmp/caida_collector.tsv")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def run_caida():
+    """Installs extrapolator before tests run"""
+
+    CaidaCollector().run()
+
 #####################
 # Engine test funcs #
 #####################
@@ -65,7 +76,6 @@ def pytest_addoption(parser):
 # Simulation Engine Patch funcs #
 #################################
 
-CAIDA_TSV_PATH = Path("/tmp/exr_caida.tsv")
 
 
 def _caida_run_patch(*args, **kwargs):
@@ -203,4 +213,5 @@ def ExtrapolatorEngineTesterCls():
     """Returns an engine tester cls that uses the extrapolator to run sims"""
 
     with patch.object(SimulationEngine, "_propagate", _propagate_patch):
-        yield EngineTester
+        with patch.object(CaidaCollector, "run", _caida_run_patch):
+            yield EngineTester

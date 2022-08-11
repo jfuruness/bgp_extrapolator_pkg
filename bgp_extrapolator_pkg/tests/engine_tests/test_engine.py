@@ -37,6 +37,7 @@ from bgp_simulator_pkg import Config032
 from bgp_simulator_pkg import Config033
 from bgp_simulator_pkg import Config034
 from bgp_simulator_pkg import EngineTester
+from bgp_simulator_pkg import EngineTestConfig
 
 
 BGP_CONFIGS = [Config001,

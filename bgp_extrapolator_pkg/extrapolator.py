@@ -75,9 +75,9 @@ class Extrapolator:
             config_path = Path(tmp_dir) / "extrapolator_config.json"
             # Writes config options to a JSON
             self._write_config(config_path,
-                               Announcements=announcements,
-                               Relationships=bgp_topology,
-                               Output=output,
+                               Announcements=str(announcements),
+                               Relationships=str(bgp_topology),
+                               Output=str(output),
                                Stub_Removal=stub_removal,
                                Origin_Only=origin_only_seeding,
                                Tiebreaking_Method=tiebreaking,
@@ -125,16 +125,16 @@ class Extrapolator:
             # TODO: really shouldn't install cmake to the system
             check_call("pip3 install cmake", shell=True)
 
-            cmd = (f"git clone -C {self._install_dir} "
-                   f"{self.extrapolator_engine_git_url}")
+            cmd = (f"cd {self._install_dir} && "
+                   f"git clone {self._git_url}")
             check_call(cmd, shell=True)
 
     def _switch_extrapolator_engine_branch(self):
         """Switches branch of extrapolator engine"""
 
         # Checkout the proper branch if desired
-        if self.branch:
-            check_call(f"cd {self._repo_path} && git checkout {self.branch}",
+        if self._branch:
+            check_call(f"cd {self._repo_path} && git checkout {self._branch}",
                        shell=True)
 
     def _build_extrapolator_engine(self):
@@ -144,9 +144,8 @@ class Extrapolator:
                 "mkdir -p build",
                 "cd build",
                 "cmake -D CMAKE_BUILD_TYPE=RelWithDebInfo ..",
-                f"make -j {cpu_count}")
-        for cmd in cmds:
-            check_call(cmd, shell=True)
+                f"make -j {cpu_count()}")
+        check_call(" && ".join(cmds), shell=True)
 
     @property
     def _repo_path(self) -> Path:

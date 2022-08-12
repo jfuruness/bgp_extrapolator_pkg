@@ -6,7 +6,8 @@ build-backend = "setuptools.build_meta"
 python_files = ["test*.py"]
 python_classes = ["Test*"]
 python_functions = ["test*"]
-#addopts = "--cov=bgp_extrapolator_pkg -n 6"
+# https://stackoverflow.com/a/41940247/8903959
+addopts = "--ignore-glob=**/old/*"
 markers = [
     "slow",  # All slow tests
 ]

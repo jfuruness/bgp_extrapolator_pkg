@@ -25,17 +25,6 @@ def install_extrapolator():
     Extrapolator().install()
 
 
-# TODO: Fix. This isn't properly patched
-# This is just the default on Caida
-CAIDA_TSV_PATH = Path("/tmp/caida_collector.tsv")
-
-
-@pytest.fixture(scope="session", autouse=True)
-def run_caida():
-    """Installs extrapolator before tests run"""
-
-    CaidaCollector().run()
-
 #####################
 # Engine test funcs #
 #####################
@@ -75,15 +64,6 @@ def pytest_addoption(parser):
 #################################
 # Simulation Engine Patch funcs #
 #################################
-
-
-
-def _caida_run_patch(*args, **kwargs):
-    """Patches the caida collector run to always write to a specific TSV"""
-
-    kwargs["tsv_path"] = CAIDA_TSV_PATH
-
-    return CaidaCollector.run(*args, **kwargs)
 
 
 def _get_ann_rows(self) -> List[Dict[str, Any]]:
@@ -131,16 +111,16 @@ def _write_ann_rows(ann_rows, ann_path):
         writer.writerows(ann_rows)
 
 
-def _run_exr(ann_path: Path, out_path: Path):
+def _run_exr(ann_path: Path, relationships_path: Path, out_path: Path):
     """Runs extrapolator for tests"""
 
     Extrapolator().run(install=False,
                        # Path to file of annoucements to seed engine with
                        announcements=ann_path,
                        # BGP Topology for engine. If blank, use Caida
-                       bgp_topology=CAIDA_TSV_PATH,
+                       bgp_topology=relationships_path,
                        # Output for results
-                       output=out_path,
+                       output_dir=out_path,
                        # Propagation configurations
                        stub_removal=False,
                        # Seed only at the origin
@@ -154,19 +134,23 @@ def _run_exr(ann_path: Path, out_path: Path):
 
 
 def _populate_sim_engine_w_exr_results(self, out_path: Path):
+    results = out_path / "Results.tsv"
     # Read the results back in
-    with out_path.open() as f:
+    with results.open() as f:
         for row in csv.DictReader(f, delimiter="\t"):
             # Determine AS path
             as_path_str = row["as_path"].replace("{", "").replace("}", "")
             as_path = tuple([int(x) for x in as_path_str.split(",")])
             # Set roa_valid_length to be roa_validity
-            if row["roa_validity"] == 2:
+            if row.get("roa_validity") == 2:
                 roa_valid_length = False
             else:
                 roa_valid_length = True
-
-            ann = Announcement(row["prefix"],
+            if len(as_path) == 1:
+                recv_relationship = Relationships.ORIGIN
+            else:
+                recv_relationship = Relationships.UNKNOWN
+            ann = Announcement(prefix=row["prefix"],
                                as_path=as_path,
                                timestamp=int(row["timestamp"]),
                                seed_asn=None,
@@ -174,11 +158,17 @@ def _populate_sim_engine_w_exr_results(self, out_path: Path):
                                # Always set to True
                                roa_origin=int(row["origin"]),
                                # Always set this to be origin for testing
-                               recv_relationship=Relationships.ORIGIN,
+                               recv_relationship=recv_relationship,
                                withdraw=False,
                                traceback_end=False,
                                communities=())
-            self.as_dict[as_path[-1]]._local_rib.add_ann(ann)
+            try:
+                self.as_dict[as_path[0]]._local_rib.add_ann(ann)
+            except KeyError:
+                print(as_path[0])
+                from pprint import pprint
+                pprint(self.as_dict)
+                input()
 
 
 def _propagate_patch(self, *args, **kwargs):
@@ -201,9 +191,11 @@ def _propagate_patch(self, *args, **kwargs):
         # Write CSV
         ann_path = Path(tmp_dir) / "ann.tsv"
         _write_ann_rows(ann_rows, ann_path)
+        relationships_path = Path(tmp_dir) / "relationships.tsv"
+        CaidaCollector()._write_tsv(self, tsv_path=relationships_path)
         # Run extrapolator
-        out_path = Path(tmp_dir) / "exr_output.tsv"
-        _run_exr(ann_path, out_path)
+        out_path = Path(tmp_dir)
+        _run_exr(ann_path, relationships_path, out_path)
         # Put results from extrapolator back in simulator
         _populate_sim_engine_w_exr_results(self, out_path)
 
@@ -213,5 +205,4 @@ def ExtrapolatorEngineTesterCls():
     """Returns an engine tester cls that uses the extrapolator to run sims"""
 
     with patch.object(SimulationEngine, "_propagate", _propagate_patch):
-        with patch.object(CaidaCollector, "run", _caida_run_patch):
-            yield EngineTester
+        yield EngineTester

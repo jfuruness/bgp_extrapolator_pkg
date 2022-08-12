@@ -42,7 +42,7 @@ class Extrapolator:
             # BGP Topology for engine. If blank, use Caida
             bgp_topology: Optional[Path] = None,
             # Output for results
-            output: Path = Path("/tmp/extrapolator_results.tsv"),
+            output_dir: Path = Path("/tmp/extrapolator_results/"),
             # Propagation configurations
             # If true, assume stubs local rib are the same as parents
             stub_removal: bool = False,
@@ -74,16 +74,17 @@ class Extrapolator:
         with TemporaryDirectory() as tmp_dir:
             config_path = Path(tmp_dir) / "extrapolator_config.json"
             # Writes config options to a JSON
-            self._write_config(config_path,
-                               Announcements=str(announcements),
-                               Relationships=str(bgp_topology),
-                               Output=str(output),
-                               Stub_Removal=stub_removal,
-                               Origin_Only=origin_only_seeding,
-                               Tiebreaking_Method=tiebreaking,
-                               Timestamp_Comparison_Method=timestamp_comp,
-                               Control_Plane_Traceback_ASNs=list(rib_dump_asns)
-                               )
+            self._write_config(
+                config_path,
+                announcements_file=str(announcements),
+                relationships_file=str(bgp_topology),
+                output_folder=str(output_dir) + "/",
+                stub_removal=stub_removal,
+                seeding_origin_only=origin_only_seeding,
+                seeding_tiebreaking_method=tiebreaking,
+                seeding_timestamp_comparison_method=timestamp_comp,
+                control_plane_traceback_asns=list(rib_dump_asns)
+                )
 
             self._run_engine(config_path)
 
@@ -100,7 +101,6 @@ class Extrapolator:
         """Runs the extrapolator engine"""
 
         cmd = f"{self._executable_path} --config {config_path}"
-        input(cmd)
         # Run the BGP Extrapolator Engine
         check_call(cmd, shell=True)
 
@@ -158,4 +158,5 @@ class Extrapolator:
     def _executable_path(self) -> Path:
         """Returns the path to the executable"""
 
-        return self._repo_path / "build" / self._executable_name
+        return (self._repo_path / "build"
+                / self._executable_name / self._executable_name)

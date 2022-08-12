@@ -36,13 +36,13 @@ from bgp_simulator_pkg import Config031
 from bgp_simulator_pkg import Config032
 from bgp_simulator_pkg import Config033
 from bgp_simulator_pkg import Config034
-from bgp_simulator_pkg import EngineTester
 from bgp_simulator_pkg import EngineTestConfig
 
 
 BGP_CONFIGS = [Config001,
                Config002,
                Config003,
+               Config004,
                Config009,
                Config010,
                Config011,
@@ -73,6 +73,7 @@ WONT_WORK_DONT_INCLUDE = [Config029,
                           Config032,
                           Config033,
                           Config034]
+
 
 @pytest.mark.engine
 class TestEngine:

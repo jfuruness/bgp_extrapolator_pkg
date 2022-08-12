@@ -1,3 +1,5 @@
+git+https://github.com/jfuruness/caida_collector_pkg.git
+git+https://github.com/jfuruness/bgp_simulator_pkg.git
 cmake
 types-requests==2.28.0
 types-PyYAML==6.0.11

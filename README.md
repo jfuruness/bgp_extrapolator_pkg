@@ -67,6 +67,12 @@ flake8 bgp_extrapolator_pkg
 mypy bgp_extrapolator_pkg
 ```
 
+To view the PDF after it completes:
+
+```
+pytest bgp_extrapolator_pkg --view
+```
+
 If you want to run it across multiple environments, and have python 3.9 installed:
 
 ```

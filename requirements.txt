@@ -1,1 +1,4 @@
+git+https://github.com/jfuruness/caida_collector_pkg.git
+git+https://github.com/jfuruness/bgp_simulator_pkg.git
 cmake
+
